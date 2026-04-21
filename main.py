@@ -129,7 +129,7 @@ def main(cfg: DictConfig) -> None:
             cfg=cfg,
             ari=ari,
         )
-        model.save(run_dir / "checkpoints")
+        model.save(run_dir / "checkpoints" / "scvi_model.pt")
     elif cfg.method == "linear_scvi":
         print("Running linear scVI...")
         adata, model = seurat_linear_scvi_clustering(adata, cfg)
@@ -144,7 +144,7 @@ def main(cfg: DictConfig) -> None:
             cfg=cfg,
             ari=ari,
         )
-        model.save(run_dir / "checkpoints")
+        model.save(run_dir / "checkpoints" / "linear_scvi_model.pt")
     else:
         raise ValueError(f"Unknown method: {cfg.method}")
 
