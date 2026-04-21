@@ -1,0 +1,22 @@
+project: scRNA_cluster
+device: ${device:}
+
+dataset: ???
+method: ???
+experiment_name: ${method}_${dataset}
+
+epochs: 250
+latent_dim: 10
+
+paths:
+  checkpoints: checkpoints
+  viz: viz
+
+hydra:
+  run:
+    dir: experiments/${experiment_name}_${now:%Y%m%d_%H%M%S}
+  sweep:
+    dir: experiments/
+    subdir: ${experiment_name}_${now:%Y%m%d_%H%M%S}
+  job:
+    chdir: false

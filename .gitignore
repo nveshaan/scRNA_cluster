@@ -1,1 +1,6 @@
 .venv
+data
+experiments
+__pycache__
+
+*.png
