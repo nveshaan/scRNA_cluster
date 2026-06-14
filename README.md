@@ -1,5 +1,7 @@
 # Clustering scRNA-seq
 
+Read the [project report](report.pdf) for more details.
+
 ## Setup
 
 ```bash
