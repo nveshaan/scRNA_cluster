@@ -44,17 +44,18 @@ def main(cfg: DictConfig) -> None:
     if cfg.dataset == "pbmc":
         print("Loading PBMC 3k dataset...")
         adata = sc.datasets.pbmc3k()
-
         adata_processed = sc.datasets.pbmc3k_processed()
         common_cells = adata.obs_names.intersection(adata_processed.obs_names)
         adata = adata[common_cells].copy()
         adata.obs["ground_truth"] = adata_processed.obs.loc[common_cells, "louvain"]
+
     elif cfg.dataset == "bmmc":
         print("Loading BMMC dataset...")
         adata = sc.read_h5ad("data/bmmc.h5ad")
         adata.obs["ground_truth"] = adata.obs[
             "cell_type"
         ]  # Assuming 'leiden' column has the original clusters
+        
     else:
         print("Loading simulated dataset...")
         adata = sc.datasets.blobs(
