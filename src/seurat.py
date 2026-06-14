@@ -1,5 +1,9 @@
+import numpy as np
 import scanpy as sc
 import scvi
+
+from src.msde import mean_shift_density_enhancement
+from src.dmsl import mean_shift_manifold_learning
 
 
 def seurat_like_clustering(adata, cfg):
@@ -13,14 +17,22 @@ def seurat_like_clustering(adata, cfg):
     sc.pp.scale(adata, max_value=10)
     sc.pp.pca(adata, svd_solver="arpack", n_comps=cfg.latent_dim)
 
-    sc.pp.neighbors(adata, n_neighbors=10, n_pcs=cfg.latent_dim)
+    trajectory = None
+    if cfg.shift == "msde":
+        adata.obsm["X_shifted"], _, _, trajectory = mean_shift_density_enhancement(np.array(adata.obsm["X_pca"]), max_iters_shift=500)
+    elif cfg.shift == "dmsl":
+        adata.obsm["X_shifted"], _, trajectory = mean_shift_manifold_learning(np.array(adata.obsm["X_pca"]), max_iters_shift=500)
+    else:
+        adata.obsm["X_shifted"] = adata.obsm["X_pca"]
+
+    sc.pp.neighbors(adata, use_rep="X_shifted", n_neighbors=10, n_pcs=cfg.latent_dim)
 
     sc.tl.umap(adata)
     adata.obsm["X_umap_pca"] = adata.obsm["X_umap"].copy()
 
     sc.tl.leiden(adata, resolution=0.8, key_added="seurat_leiden")
 
-    return adata
+    return adata, trajectory
 
 
 def seurat_scvi_clustering(adata, cfg):
@@ -45,15 +57,23 @@ def seurat_scvi_clustering(adata, cfg):
 
     adata.obsm["X_scvi"] = model.get_latent_representation()
 
+    trajectory = None
+    if cfg.shift == "msde":
+        adata.obsm["X_shifted"], _, _, trajectory = mean_shift_density_enhancement(np.array(adata.obsm["X_scvi"]), max_iters_shift=500)
+    elif cfg.shift == "dmsl":
+        adata.obsm["X_shifted"], _, trajectory = mean_shift_manifold_learning(np.array(adata.obsm["X_scvi"]), max_iters_shift=500)
+    else:
+        adata.obsm["X_shifted"] = adata.obsm["X_scvi"]
+
     print("Running Leiden clustering on scVI latent space...")
-    sc.pp.neighbors(adata, use_rep="X_scvi", n_neighbors=10)
+    sc.pp.neighbors(adata, use_rep="X_shifted", n_neighbors=10)
 
     sc.tl.umap(adata)
     adata.obsm["X_umap_scvi"] = adata.obsm["X_umap"].copy()
 
     sc.tl.leiden(adata, resolution=0.8, key_added="seurat_scvi_leiden")
 
-    return adata, model
+    return adata, model, trajectory
 
 
 def seurat_linear_scvi_clustering(adata, cfg):
@@ -78,12 +98,20 @@ def seurat_linear_scvi_clustering(adata, cfg):
 
     adata.obsm["X_linear_scvi"] = model.get_latent_representation()
 
+    trajectory = None
+    if cfg.shift == "msde":
+        adata.obsm["X_shifted"], _, _, trajectory = mean_shift_density_enhancement(np.array(adata.obsm["X_linear_scvi"]), max_iters_shift=500)
+    elif cfg.shift == "dmsl":
+        adata.obsm["X_shifted"], _, trajectory = mean_shift_manifold_learning(np.array(adata.obsm["X_linear_scvi"]), max_iters_shift=500)
+    else:
+        adata.obsm["X_shifted"] = adata.obsm["X_linear_scvi"]
+
     print("Running Leiden clustering on LinearSCVI latent space...")
-    sc.pp.neighbors(adata, use_rep="X_linear_scvi", n_neighbors=10)
+    sc.pp.neighbors(adata, use_rep="X_shifted", n_neighbors=10)
 
     sc.tl.umap(adata)
     adata.obsm["X_umap_linear_scvi"] = adata.obsm["X_umap"].copy()
 
     sc.tl.leiden(adata, resolution=0.8, key_added="seurat_linear_scvi_leiden")
 
-    return adata, model
+    return adata, model, trajectory

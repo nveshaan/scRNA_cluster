@@ -13,7 +13,7 @@ uv sync
 ## Run
 
 ```bash
-python main.py --multirun dataset=pbmc,bmmc method=pca,scvi,linear_scvi 'latent_dim=range(10,110,10)'
+python main.py --multirun dataset=pbmc,bmmc method=pca,scvi,linear_scvi 'latent_dim=range(10,110,10) shift=msde,dmsl'
 ```
 
 ## Acknowledgements

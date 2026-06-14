@@ -9,8 +9,9 @@ import seaborn as sns
 from omegaconf import DictConfig, OmegaConf, open_dict
 from sklearn.metrics import adjusted_rand_score
 import torch
+import numpy as np
 
-from algorithms.seurat import (
+from src.seurat import (
     seurat_like_clustering,
     seurat_scvi_clustering,
     seurat_linear_scvi_clustering,
@@ -105,7 +106,7 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.method == "pca":
         print("Running PCA...")
-        adata = seurat_like_clustering(adata, cfg)
+        adata, trajectory = seurat_like_clustering(adata, cfg)
         ari = adjusted_rand_score(adata.obs["seurat_leiden"], adata.obs["ground_truth"])
         save_embedding_only(
             adata,
@@ -117,7 +118,7 @@ def main(cfg: DictConfig) -> None:
         )
     elif cfg.method == "scvi":
         print("Running scVI...")
-        adata, model = seurat_scvi_clustering(adata, cfg)
+        adata, model, trajectory = seurat_scvi_clustering(adata, cfg)
         ari = adjusted_rand_score(
             adata.obs["seurat_scvi_leiden"], adata.obs["ground_truth"]
         )
@@ -132,7 +133,7 @@ def main(cfg: DictConfig) -> None:
         model.save(run_dir / "checkpoints" / "scvi_model.pt")
     elif cfg.method == "linear_scvi":
         print("Running linear scVI...")
-        adata, model = seurat_linear_scvi_clustering(adata, cfg)
+        adata, model, trajectory = seurat_linear_scvi_clustering(adata, cfg)
         ari = adjusted_rand_score(
             adata.obs["seurat_linear_scvi_leiden"], adata.obs["ground_truth"]
         )
@@ -147,8 +148,11 @@ def main(cfg: DictConfig) -> None:
         model.save(run_dir / "checkpoints" / "linear_scvi_model.pt")
     else:
         raise ValueError(f"Unknown method: {cfg.method}")
+    
+    if trajectory is not None:
+        np.save(Path(run_dir) / "trajectory.npy", trajectory)
 
-    print(f"Finished {cfg.method} on {cfg.dataset} with ARI: {ari:.4f}")
+    print(f"Finished {cfg.method} on {cfg.dataset} with ARI ({cfg.shift}): {ari:.4f}")
 
 
 if __name__ == "__main__":

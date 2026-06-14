@@ -3,7 +3,8 @@ device: ${device:}
 
 dataset: ???
 method: ???
-experiment_name: ${method}_${dataset}_${latent_dim}d
+shift: none
+experiment_name: ${method}_${dataset}_${latent_dim}d_${shift}
 
 epochs: 250
 latent_dim: 10
